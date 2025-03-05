@@ -2,15 +2,19 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import './App.css'
 
-
 const App = () => {
 
-  const [count, setCount] = useState(32)
   const [users, setUsers] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [telephone, setTelephone] = useState('')
+  const [address, setAddress] = useState('')
+  const [hobbies, setHobbies] = useState([])
+  const [newHobby, setNewHobby] = useState('')
+  const [message, setMessage] = useState('')
 
-  const myName = 'Alice'
 
   const fetchAPI = async () => {
     setLoading(true)
@@ -27,28 +31,42 @@ const App = () => {
     }
   }
 
-  console.log(users)
+  const addHobby = () => {
+    if (newHobby.trim() !== '') {
+        setHobbies([...hobbies, newHobby.trim()])
+        setNewHobby('')
+    }
+  }
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    console.log(firstName, lastName, telephone, address, hobbies)
+    try{
+      const addNewUser = await axios.post('http://localhost:8000/api/users', {firstName, lastName, telephone, address, hobbies})
+      setMessage('Adding a user !');
+    }
+    catch(err){
+      console. log(err)
+      setMessage("Error adding user");
+    }
+    finally{
+      fetchAPI()
+    }
+  }
 
   useEffect(() => {
     fetchAPI()
-  }, [count])
+  }, [])
 
-  if (loading) {
-    return <p>Loading data...</p>
-  }
-
-  if (error) {
-    return <p>{error}</p>
-  }
+  if (loading) {return <p>Loading data...</p>}
+  if (error) {return <p>{error}</p>}
 
   return (
     <>
-     <h1 className='myH1'>Hello World!</h1>
-     <p>Hello my name is {myName} and I am {count}</p>
-     <button onClick={() => setCount(count + 1)}>+1</button>
-     {users && users.map(user => {
+     {users && !loading && users.map(user => {
       return(
-        <div style={{border: '2px solid red'}}>
+        <div key={user.id} style={{border: '2px solid red'}}>
           <h3>FirstName : {user.firstName}</h3>
           <h4>LastName : {user.lastName}</h4>
           <p>Telephone : {user.telephone}</p>
@@ -57,6 +75,23 @@ const App = () => {
         </div>
       )
      })}
+     <form action="POST" onSubmit={handleSubmit} >
+      <input type="text" placeholder='firstName' required onChange={e => setFirstName(e.target.value) } />
+      <input type="text" placeholder='lastName' required onChange={e => setLastName(e.target.value) } />
+      <input type="text" placeholder='telephone' required onChange={e => setTelephone(e.target.value) } />
+      <input type="text" placeholder='address' required onChange={e => setAddress(e.target.value) } />
+      <div>
+        <input type="text" placeholder='hobby' required onChange={e => setNewHobby(e.target.value) } />
+        <button type="button" onClick={addHobby}>Add a hobby</button>
+        <ul>
+          {hobbies.map((hobby, index) => (
+            <li key={index}>{hobby}</li>
+          ))}
+        </ul>
+      </div>
+      <input type="submit" />
+     </form>
+     {message && <p>{message}</p>}
     </>
   )
 }
